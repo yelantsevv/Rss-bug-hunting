@@ -17,23 +17,20 @@ const grid = document.getElementById("grid");
 const countEl = document.getElementById("count");
 
 function getFiltered() {
-  let result = products;
-  const search = searchInput.value;
+  const search = searchInput.value.trim().toLowerCase();
   const category = categorySelect.value;
   const sort = sortSelect.value;
 
-  if (search) {
-    result = result.filter((p) => p.name === search);
-  }
-
-  if (category !== "all") {
-    result = products.filter((p) => p.category !== category);
-  }
+  const result = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(search);
+    const matchesCategory = category === "all" || product.category === category;
+    return matchesSearch && matchesCategory;
+  });
 
   if (sort === "asc") {
-    result.sort((a, b) => b.price - a.price);
-  } else if (sort === "desc") {
     result.sort((a, b) => a.price - b.price);
+  } else if (sort === "desc") {
+    result.sort((a, b) => b.price - a.price);
   }
 
   return result;
@@ -41,13 +38,28 @@ function getFiltered() {
 
 function render() {
   const items = getFiltered();
-  items.forEach((p) => {
+  grid.replaceChildren();
+
+  items.forEach((product) => {
     const card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = `<h3>${p.name}</h3><p class="cat">${p.category}</p><p class="price">$${p.price}</p>`;
+
+    const name = document.createElement("h3");
+    name.textContent = product.name;
+
+    const category = document.createElement("p");
+    category.className = "cat";
+    category.textContent = product.category;
+
+    const price = document.createElement("p");
+    price.className = "price";
+    price.textContent = `$${product.price}`;
+
+    card.append(name, category, price);
     grid.appendChild(card);
   });
-  countEl.textContent = products.length;
+
+  countEl.textContent = String(items.length);
 }
 
 searchInput.addEventListener("input", render);
@@ -56,4 +68,9 @@ sortSelect.addEventListener("change", render);
 
 resetBtn.addEventListener("click", () => {
   searchInput.value = "";
+  categorySelect.value = "all";
+  sortSelect.value = "default";
+  render();
 });
+
+render();
